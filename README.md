@@ -1,3 +1,4 @@
+```bash
 color-looks-mvp-v.1/
 ├─ README.md
 ├─ LICENSE
@@ -161,3 +162,4 @@ color-looks-mvp-v.1/
    ├─ build_macos.yml
    ├─ test.yml
    └─ release.yml
+'''

@@ -1,0 +1,176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.clientofaxioms/color-looks/lookpreset.schema.json",
+  "title": "ColorLooks Look Preset (client of AXIOMS)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "schema_version", "id", "name", "defaults", "pipeline"],
+  "properties": {
+    "schema": { "const": "com.clientofaxioms.colorlooks.lookpreset" },
+    "schema_version": { "type": "integer", "minimum": 1, "maximum": 1 },
+
+    "id": { "type": "string", "pattern": "^[a-z0-9_\\-]{3,64}$" },
+    "name": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "description": { "type": "string", "maxLength": 2048 },
+    "author": { "type": "string", "maxLength": 128 },
+    "created_utc": { "type": "string", "format": "date-time" },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string", "maxLength": 48 },
+      "maxItems": 32
+    },
+
+    "defaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["exposure_stops", "contrast", "pivot", "saturation", "film_strength", "grain_amount", "halation_amount"],
+      "properties": {
+        "exposure_stops": { "type": "number", "minimum": -20.0, "maximum": 20.0 },
+        "contrast": { "type": "number", "minimum": 0.1, "maximum": 4.0 },
+        "pivot": { "type": "number", "minimum": 0.0001, "maximum": 4.0 },
+        "saturation": { "type": "number", "minimum": 0.0, "maximum": 4.0 },
+
+        "warm_cool": { "type": "number", "minimum": -1.0, "maximum": 1.0 },
+        "shadow_tint": { "$ref": "#/$defs/rgbSigned" },
+        "highlight_tint": { "$ref": "#/$defs/rgbSigned" },
+
+        "film_strength": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        "grain_amount": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        "halation_amount": { "type": "number", "minimum": 0.0, "maximum": 1.0 }
+      }
+    },
+
+    "pipeline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["working_space", "tone_map", "film_matrix", "curves", "gamut_compress", "grain", "halation"],
+      "properties": {
+        "working_space": { "$ref": "#/$defs/workingSpace" },
+        "tone_map": { "$ref": "#/$defs/toneMap" },
+        "film_matrix": { "$ref": "#/$defs/filmMatrix" },
+        "curves": { "$ref": "#/$defs/curves" },
+        "gamut_compress": { "$ref": "#/$defs/gamutCompress" },
+        "grain": { "$ref": "#/$defs/grain" },
+        "halation": { "$ref": "#/$defs/halation" }
+      }
+    }
+  },
+
+  "$defs": {
+    "rgbSigned": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": { "type": "number", "minimum": -1.0, "maximum": 1.0 }
+    },
+
+    "workingSpace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "config", "input", "working", "output"],
+      "properties": {
+        "type": { "const": "ocio" },
+        "config": { "type": "string", "enum": ["builtin_or_host", "builtin", "path"] },
+        "config_path": { "type": "string" },
+        "input": { "type": "string" },
+        "working": { "type": "string" },
+        "output": { "type": "string" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "config": { "const": "path" } }, "required": ["config"] },
+          "then": { "required": ["config_path"] }
+        }
+      ]
+    },
+
+    "toneMap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["model", "shoulder_strength", "toe_strength", "preserve_hue"],
+      "properties": {
+        "model": { "type": "string", "enum": ["filmic_v1"] },
+        "shoulder_strength": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        "toe_strength": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        "preserve_hue": { "type": "boolean" }
+      }
+    },
+
+    "filmMatrix": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "matrix_3x3", "strength"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "matrix_3x3": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": { "type": "number", "minimum": -4.0, "maximum": 4.0 }
+          }
+        },
+        "strength": { "type": "number", "minimum": 0.0, "maximum": 1.0 }
+      }
+    },
+
+    "curvePoint": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": [{ "type": "number" }, { "type": "number" }]
+    },
+
+    "curves": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "hue_vs_sat", "hue_vs_hue", "luma_vs_sat"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "hue_vs_sat": { "type": "array", "maxItems": 64, "items": { "$ref": "#/$defs/curvePoint" } },
+        "hue_vs_hue": { "type": "array", "maxItems": 64, "items": { "$ref": "#/$defs/curvePoint" } },
+        "luma_vs_sat": { "type": "array", "maxItems": 64, "items": { "$ref": "#/$defs/curvePoint" } }
+      }
+    },
+
+    "gamutCompress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "method", "strength"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "method": { "type": "string", "enum": ["neutral_axis"] },
+        "strength": { "type": "number", "minimum": 0.0, "maximum": 1.0 }
+      }
+    },
+
+    "grain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "model", "size", "colorful", "shadows_boost", "highlights_rolloff"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "model": { "type": "string", "enum": ["procedural_v1"] },
+        "size": { "type": "number", "minimum": 0.0, "maximum": 2.0 },
+        "colorful": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        "shadows_boost": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        "highlights_rolloff": { "type": "number", "minimum": 0.0, "maximum": 1.0 }
+      }
+    },
+
+    "halation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "threshold", "radius", "strength"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "threshold": { "type": "number", "minimum": 0.0, "maximum": 32.0 },
+        "radius": { "type": "number", "minimum": 0.0, "maximum": 200.0 },
+        "strength": { "type": "number", "minimum": 0.0, "maximum": 1.0 }
+      }
+    }
+  }
+}

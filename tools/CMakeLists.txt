@@ -1,0 +1,2 @@
+add_subdirectory(preset_validator)
+add_subdirectory(ocio_inspector)

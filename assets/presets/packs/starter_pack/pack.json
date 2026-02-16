@@ -1,0 +1,12 @@
+{
+  "schema": "com.clientofaxioms.colorlooks.lookpack",
+  "schema_version": 1,
+  "pack_id": "starter_pack",
+  "name": "Starter Pack",
+  "author": "client of AXIOMS",
+  "license": "builtin",
+  "looks": [
+    "looks/neutral_film.json",
+    "looks/soft_contrast_film.json"
+  ]
+}
